@@ -7,14 +7,16 @@ import Kanji from '../classes/Kanji'
 
 export const initWorldPipelineModule = () => {
   const initWorld = () => {
+    Layout.stopLoading()
     Lights.init()
-    Layout.init()
+
     // ParticlesSystem.init()
 
     console.log('✨', 'World ready')
   }
 
   const init = () => {
+    Layout.init()
     KanjiClient.fetchJoyoKanji({ callback: initWorld })
   }
 

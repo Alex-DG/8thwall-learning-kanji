@@ -3,6 +3,8 @@ import KanjiClient from './KanjiClient'
 
 class _Layout {
   async onClickNextBtn() {
+    this.startLoading()
+
     const randomJojoKanji = KanjiClient.getRandomJoyoKanji()
     console.log('->', 'Next Kanji', randomJojoKanji)
 
@@ -10,6 +12,18 @@ class _Layout {
     const { text } = await KanjiClient.fetchKanjiSvg(kanjiDetails?.unicode)
 
     await Kanji.draw(text)
+
+    this.stopLoading()
+  }
+
+  startLoading() {
+    this.loading.style.display = 'flex'
+    this.nextBtn.disabled = true
+  }
+
+  stopLoading() {
+    this.loading.style.display = 'none'
+    this.nextBtn.disabled = false
   }
 
   ////////////////////////////////////////////////////////////////
@@ -23,6 +37,14 @@ class _Layout {
     this.nextBtn.addEventListener('click', this.onClickNextBtn)
   }
 
+  setLoading() {
+    document.querySelector('.loading-container').innerHTML = `
+        <div class="spinner"></div>
+    `
+
+    this.loading = document.querySelector('.loading-container')
+  }
+
   ////////////////////////////////////////////////////////////////
 
   bind() {
@@ -32,6 +54,9 @@ class _Layout {
   init() {
     this.bind()
     this.setBottom()
+    this.setLoading()
+
+    this.startLoading()
   }
 }
 const Layout = new _Layout()
