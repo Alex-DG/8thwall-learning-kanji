@@ -1,3 +1,5 @@
+import Layout from './Layout'
+
 class _KanjiClient {
   getApi() {
     return {
@@ -18,7 +20,7 @@ class _KanjiClient {
 
   ////////////////////////////////////////////////////////////////
 
-  async fetchJoyoKanji({ callback }) {
+  async fetchJoyoKanji() {
     console.log('->', 'in progress: ', ' [ fetch Joyo Kanji ]')
 
     try {
@@ -28,14 +30,14 @@ class _KanjiClient {
       if (response.ok) {
         const kanjiList = await response.json()
         this._jojoKanjiList = kanjiList
-
-        callback()
       } else {
         throw new Error(`Failed to fetch Jōyō kanji: ${response.statusText}`)
       }
     } catch (error) {
       console.log('error-fetch-jojo-kanji', { error })
     }
+
+    Layout.stopLoading()
 
     console.log('->', 'done: ', ' [ fetch Joyo Kanji ]')
   }
@@ -78,18 +80,26 @@ class _KanjiClient {
 
     try {
       const paddedUnicode = kanjiUnicode.padStart(5, '0')
+
+      const token = import.meta.env.VITE_GITHUB_TOKEN
+
       const url = `${this.getApi().kanjivg_base_url}/${paddedUnicode}.svg`
 
       const response = await fetch(url, {
         headers: {
           Accept: 'application/vnd.github+json',
+          Authorization: `Bearer ${token}`,
         },
       })
 
       if (response.ok) {
         const data = await response.json()
 
-        const responseFromUrl = await fetch(data.download_url)
+        const responseFromUrl = await fetch(data.download_url, {
+          // headers: {
+          //   Authorization: `Bearer ${token}`,
+          // },
+        })
         const text = await responseFromUrl.text()
 
         return { data, text }

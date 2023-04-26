@@ -1,5 +1,7 @@
 import * as THREE from 'three'
 
+import { gsap } from 'gsap'
+
 import { bezierConstantDensity } from './Utils/Bezier'
 import { Easings } from './Utils/Easing'
 import { mix } from './Utils/Maths'
@@ -9,33 +11,107 @@ class _Kanji {
     // create a BufferGeometry
     const geometry = new THREE.BufferGeometry()
 
+    console.log({ data })
+
     // create Float32Arrays to hold the position and size data
     const positions = new Float32Array(data.points.length * 3)
     const sizes = new Float32Array(data.sizes.length)
+    const randomness = new Float32Array(data.sizes.length * 3)
 
     // loop through the points array and add the position and size data to the Float32Arrays
     for (let i = 0; i < data.points.length; i++) {
-      positions[i * 3] = data.points[i].x
-      positions[i * 3 + 1] = data.points[i].y
-      positions[i * 3 + 2] = data.points[i].z
+      positions[i * 3] = data.points[i].x //+ Math.random() * 0.2 - 0.1
+      positions[i * 3 + 1] = data.points[i].y //+ Math.random() * 0.2 - 0.1
+      positions[i * 3 + 2] = data.points[i].z //+ Math.random() * 0.2 - 0.1
       sizes[i] = data.sizes[i]
+
+      randomness[i * 3] = Math.random() * 2 - 1 //+ Math.random() * 0.2 - 0.1
+      randomness[i * 3 + 1] = Math.random() * 2 - 1 //+ Math.random() * 0.2 - 0.1
+      randomness[i * 3 + 2] = Math.random() * 2 - 1
     }
 
     // add the position and size data to the BufferGeometry
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
     geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1))
+    geometry.setAttribute('aRandom', new THREE.BufferAttribute(randomness, 3))
 
     // create the material for the points
-    const material = new THREE.PointsMaterial({
-      size: 0.35, // default size of points
-      color: new THREE.Color('hotpink'),
+    // const material = new THREE.PointsMaterial({
+    //   size: 0.35, // default size of points
+    //   color: new THREE.Color('hotpink'),
+    // })
+
+    // define the vertex shader code
+    const vertexShader = `
+      uniform float uTime;
+      uniform float uScale;
+      uniform float uFrequency;
+
+      attribute vec3 aRandom;
+
+      varying vec3 vPosition;
+
+      void main() {
+        vec3 pos = position;
+
+        pos.x += sin(uTime * aRandom.x) * uFrequency;
+        pos.y += cos(uTime * aRandom.y) * uFrequency;
+        pos.z += cos(uTime * aRandom.z) * uFrequency;
+
+        // Transition 
+        pos.x *= uScale + (sin(pos.y * 4.0 + uTime) * (1.0 - uScale));
+        pos.y *= uScale + (sin(pos.z * 4.0 + uTime) * (1.0 - uScale)); 
+        pos.z *= uScale + (sin(pos.x * 10.0 + uTime) * (1.0 - uScale));
+        pos *= uScale;
+
+        vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
+        gl_Position = projectionMatrix * mvPosition;
+        gl_PointSize = 125.0 / -mvPosition.z;
+    
+        vPosition = pos;
+      }
+    `
+
+    // define the fragment shader code
+    const fragmentShader = `
+      uniform vec3 uColor1;
+      uniform vec3 uColor2;
+
+      varying vec3 vPosition;
+
+      void main() {
+        // float depth =  vPosition.z + 0.5;
+        // vec3 color =  mix(uColor1, uColor2, depth);
+        // gl_FragColor = vec4(color, depth);
+
+        float distanceToCenter = distance(gl_PointCoord, vec2(0.5));
+        float strength = 0.05 / distanceToCenter - 0.1;
+
+        gl_FragColor = vec4(mix(uColor1, uColor2, strength), strength);
+      }
+    `
+
+    const material = new THREE.ShaderMaterial({
+      uniforms: {
+        uTime: { value: 0 },
+        uScale: { value: 0 },
+        uFrequency: { value: 0.15 },
+        uColor1: { value: new THREE.Color(0xffffff * Math.random()) },
+        uColor2: { value: new THREE.Color(0xffffff * Math.random()) },
+      },
+      vertexShader: vertexShader,
+      fragmentShader: fragmentShader,
+      transparent: true,
+      depthTest: false,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
     })
+    this.materials.push(material)
 
     // create the Points object
     const pointsCloud = new THREE.Points(geometry, material)
     pointsCloud.rotateX(Math.PI)
-    pointsCloud.scale.multiplyScalar(0.5)
-    pointsCloud.position.y += 2
+
     this.group.add(pointsCloud)
   }
 
@@ -51,6 +127,7 @@ class _Kanji {
         let y = 0
         const segments = p.pathSegList
         let segmentPoints = []
+
         for (let i = 0; i < segments.numberOfItems; i++) {
           const segment = segments.getItem(i)
           if (segment instanceof SVGPathSegMovetoAbs) {
@@ -159,6 +236,8 @@ class _Kanji {
   }
 
   setConfig() {
+    this.materials = []
+
     if (!this.group) {
       const { scene, camera } = XR8.Threejs.xrScene()
 
@@ -166,7 +245,6 @@ class _Kanji {
       scene.add(group)
       camera.lookAt(group.position)
 
-      this.materials = []
       this.group = group
     } else {
       this.clear()
@@ -183,26 +261,33 @@ class _Kanji {
     lines.forEach(({ points, sizes }) => {
       this.createPointsCloud({ points, sizes })
     })
+
+    const scales = this.materials.map((m) => m.uniforms.uScale)
+
+    gsap.to(scales, {
+      value: 1,
+      duration: 0.8,
+      delay: 0.1,
+      ease: 'power3.out',
+    })
   }
 
   clear() {
     if (!this.group) return
 
-    // loop through the children of the group and remove them
     while (this.group.children.length > 0) {
-      var child = this.group.children[0]
+      const child = this.group.children[0]
       this.group.remove(child)
-      if (child instanceof THREE.Points) {
-        child.geometry.dispose()
-        child.material.dispose()
-      }
+
+      child?.geometry?.dispose()
+      child?.material?.dispose()
     }
   }
 
-  update() {
+  update(elapsedTime) {
     if (this.materials) {
       this.materials.forEach((m) => {
-        m.uniforms.uTime.value = performance.now()
+        m.uniforms.uTime.value = elapsedTime
       })
     }
   }

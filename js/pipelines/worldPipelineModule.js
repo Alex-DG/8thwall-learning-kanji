@@ -1,28 +1,25 @@
+import { Clock } from 'three'
+
 import Layout from '../classes/Layout'
 import Lights from '../classes/Lights'
-import ParticlesSystem from '../classes/ParticlesSystem'
 
 import KanjiClient from '../classes/KanjiClient'
 import Kanji from '../classes/Kanji'
 
 export const initWorldPipelineModule = () => {
-  const initWorld = () => {
-    Layout.stopLoading()
-    Lights.init()
-
-    // ParticlesSystem.init()
-
-    console.log('✨', 'World ready')
-  }
+  const clock = new Clock()
 
   const init = () => {
     Layout.init()
-    KanjiClient.fetchJoyoKanji({ callback: initWorld })
+    Lights.init()
+
+    KanjiClient.fetchJoyoKanji()
   }
 
   const render = () => {
-    ParticlesSystem?.update()
-    Kanji?.update()
+    const elapsedTime = clock.getElapsedTime()
+
+    Kanji?.update(elapsedTime)
   }
 
   return {
