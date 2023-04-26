@@ -5,13 +5,12 @@ import { gsap } from 'gsap'
 import { bezierConstantDensity } from './Utils/Bezier'
 import { Easings } from './Utils/Easing'
 import { mix } from './Utils/Maths'
+import KanjiMaterial from './Materials/KanjiMaterial'
 
 class _Kanji {
   createPointsCloud(data) {
     // create a BufferGeometry
     const geometry = new THREE.BufferGeometry()
-
-    console.log({ data })
 
     // create Float32Arrays to hold the position and size data
     const positions = new Float32Array(data.points.length * 3)
@@ -36,81 +35,13 @@ class _Kanji {
     geometry.setAttribute('aRandom', new THREE.BufferAttribute(randomness, 3))
 
     // create the material for the points
-    // const material = new THREE.PointsMaterial({
-    //   size: 0.35, // default size of points
-    //   color: new THREE.Color('hotpink'),
-    // })
-
-    // define the vertex shader code
-    const vertexShader = `
-      uniform float uTime;
-      uniform float uScale;
-      uniform float uFrequency;
-
-      attribute vec3 aRandom;
-
-      varying vec3 vPosition;
-
-      void main() {
-        vec3 pos = position;
-
-        pos.x += sin(uTime * aRandom.x) * uFrequency;
-        pos.y += cos(uTime * aRandom.y) * uFrequency;
-        pos.z += cos(uTime * aRandom.z) * uFrequency;
-
-        // Transition 
-        pos.x *= uScale + (sin(pos.y * 4.0 + uTime) * (1.0 - uScale));
-        pos.y *= uScale + (sin(pos.z * 4.0 + uTime) * (1.0 - uScale)); 
-        pos.z *= uScale + (sin(pos.x * 10.0 + uTime) * (1.0 - uScale));
-        pos *= uScale;
-
-        vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
-        gl_Position = projectionMatrix * mvPosition;
-        gl_PointSize = 125.0 / -mvPosition.z;
-    
-        vPosition = pos;
-      }
-    `
-
-    // define the fragment shader code
-    const fragmentShader = `
-      uniform vec3 uColor1;
-      uniform vec3 uColor2;
-
-      varying vec3 vPosition;
-
-      void main() {
-        // float depth =  vPosition.z + 0.5;
-        // vec3 color =  mix(uColor1, uColor2, depth);
-        // gl_FragColor = vec4(color, depth);
-
-        float distanceToCenter = distance(gl_PointCoord, vec2(0.5));
-        float strength = 0.05 / distanceToCenter - 0.1;
-
-        gl_FragColor = vec4(mix(uColor1, uColor2, strength), strength);
-      }
-    `
-
-    const material = new THREE.ShaderMaterial({
-      uniforms: {
-        uTime: { value: 0 },
-        uScale: { value: 0 },
-        uFrequency: { value: 0.15 },
-        uColor1: { value: new THREE.Color(0xffffff * Math.random()) },
-        uColor2: { value: new THREE.Color(0xffffff * Math.random()) },
-      },
-      vertexShader: vertexShader,
-      fragmentShader: fragmentShader,
-      transparent: true,
-      depthTest: false,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending,
-    })
+    const material = new KanjiMaterial()
     this.materials.push(material)
 
     // create the Points object
     const pointsCloud = new THREE.Points(geometry, material)
     pointsCloud.rotateX(Math.PI)
+    pointsCloud.scale.multiplyScalar(0.8)
 
     this.group.add(pointsCloud)
   }

@@ -95,11 +95,7 @@ class _KanjiClient {
       if (response.ok) {
         const data = await response.json()
 
-        const responseFromUrl = await fetch(data.download_url, {
-          // headers: {
-          //   Authorization: `Bearer ${token}`,
-          // },
-        })
+        const responseFromUrl = await fetch(data.download_url)
         const text = await responseFromUrl.text()
 
         return { data, text }
