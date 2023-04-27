@@ -19,14 +19,50 @@ class _Layout {
     this.stopLoading()
   }
 
+  async onClickSearchBtn() {
+    this.startLoading()
+
+    const word = this.wordInput.value
+
+    const kanji = await KanjiClient.searchKanjiByWord(word)
+
+    if (kanji?.length > 0) {
+      Array.from(kanji).forEach(async (char, index) => {
+        const details = await KanjiClient.fetchKanjiDetails(char)
+
+        const { text } = await KanjiClient.fetchKanjiSvg(details?.unicode)
+
+        await Kanji.draw(text, index)
+
+        this.updateKanjiPanel(details, index)
+      })
+    } else {
+      const details = await KanjiClient.fetchKanjiDetails(kanji)
+
+      const { text } = await KanjiClient.fetchKanjiSvg(details?.unicode)
+
+      await Kanji.draw(text)
+
+      this.updateKanjiPanel(details)
+    }
+
+    setTimeout(() => {
+      this.stopLoading()
+    }, 500)
+  }
+
   onToggleTopBtn() {
+    const topMenus = document.querySelectorAll('.top-menu')
+
     if (this.topMenuEnabled) {
       gsap.to(this.toggleTopMBtn, {
         opacity: 0.2,
         duration: 0.5,
         ease: 'power3.out',
         onStart: () => {
-          this.topMenu.style.display = 'none'
+          topMenus?.forEach((element) => {
+            element.style.display = 'none'
+          })
         },
       })
     } else {
@@ -35,7 +71,9 @@ class _Layout {
         duration: 0.5,
         ease: 'power3.out',
         onStart: () => {
-          this.topMenu.style.display = 'flex'
+          topMenus?.forEach((element) => {
+            element.style.display = 'flex'
+          })
         },
       })
     }
@@ -45,40 +83,60 @@ class _Layout {
 
   ////////////////////////////////////////////////////////////////
 
-  updateKanjiPanel(data) {
-    const {
-      kanji,
-      stroke,
-      meanings,
-      gradeJltp,
-      kunReadings,
-      nameReadings,
-      unicode,
-    } = this.kanjiPanel
+  updateKanjiPanel(data, index = 0) {
+    const innerHTML = `
+      <div>
+        <span>Kanji: </span><span id="kanji-value">${data.kanji}</span>
+      </div>
 
-    kanji.innerText = data.kanji
-    stroke.innerText = data.stroke_count
-    gradeJltp.innerText = `${data.grade} | ${data.jlpt}`
-    meanings.innerText = data.meanings.join(', ')
+      <div>
+        <span>Stoke count: </span><span id="stroke-value">${
+          data.stroke_count
+        }</span>
+      </div>
 
-    if (data.kun_readings?.length > 0) {
-      this.sectionKun.style.display = 'block'
-      kunReadings.innerText = data.kun_readings.join(', ')
-    } else {
-      this.sectionKun.style.display = 'none'
-    }
+      <div>
+        <span>JLPT: </span><span id="grade-jlpt-value">${data.jlpt}</span>
+      </div>
 
-    if (data.name_readings?.length > 0) {
-      this.sectionName.style.display = 'block'
-      nameReadings.innerText = data.name_readings.join(', ')
-    } else {
-      this.sectionName.style.display = 'none'
-    }
+      <div>
+        <span>Meaning(s): </span><span id="meanings-value">${data.meanings.join(
+          ', '
+        )}</span>
+      </div>
 
-    unicode.innerText = data.unicode
+      <div id="section-kun">
+        <span>Kun reading(s): </span><span id="kun-readings-value">${
+          data.kun_readings.join(', ') || ''
+        }</span>
+      </div>
+
+      <div id="section-name">
+        <span>Name reading(s): </span><span id="name-readings-value">${
+          data.name_readings.join(', ') || ''
+        }</span>
+      </div>
+    `
+
+    const menu = document.createElement('div')
+    menu.classList.add('top-menu')
+    menu.classList.add(`${index}`)
+    menu.innerHTML = innerHTML
+
+    this.topContainer.appendChild(menu)
+  }
+
+  clearMenus() {
+    const topMenus = document.querySelectorAll('.top-menu')
+    topMenus?.forEach((element) => {
+      element?.remove()
+    })
   }
 
   startLoading() {
+    this.clearMenus()
+    Kanji.clear()
+
     this.loading.style.display = 'flex'
     this.nextBtn.disabled = true
   }
@@ -93,48 +151,27 @@ class _Layout {
   setBottom() {
     document.querySelector('.bottom-container').innerHTML = `
         <div class="bottom-menu">
-           <button id="next-btn">Next 漢字</button>
+          <input id="word-input" placeholder="type a word" value="" />
+          <button id="next-btn">Random 漢字</button>
+          <button id="search-btn">Search 漢字</button>
         </div>
     `
 
+    this.wordInput = document.getElementById('word-input')
+
     this.nextBtn = document.getElementById('next-btn')
     this.nextBtn.addEventListener('click', this.onClickNextBtn)
+
+    this.searchBtn = document.getElementById('search-btn')
+    this.searchBtn.addEventListener('click', this.onClickSearchBtn)
   }
 
   setTop() {
     document.querySelector('.top-container').innerHTML = `
         <button id="toggle-top-btn"></button>
-
-        <div class="top-menu">
-          <div>
-            <span>Kanji: </span><span id="kanji-value"></span>
-          </div>
-
-          <div>
-            <span>Stoke count: </span><span id="stroke-value"></span>
-          </div>
-
-          <div>
-            <span>Grade | jlpt: </span><span id="grade-jlpt-value"></span>
-          </div>
-
-          <div>
-            <span>Meaning(s): </span><span id="meanings-value"></span>
-          </div>
-
-          <div id="section-kun">
-            <span>Kun reading(s): </span><span id="kun-readings-value"></span>
-          </div>
-
-          <div id="section-name">
-            <span>Name reading(s): </span><span id="name-readings-value"></span>
-          </div>
-
-          <div>
-            <span>Unicode: </span><span id="unicode-value"></span>
-          </div>
-        </div>
+        <div class="top-container-wrapper"></div>
     `
+    this.topContainer = document.querySelector('.top-container-wrapper')
     this.topMenu = document.querySelector('.top-menu')
     this.toggleTopMBtn = document.getElementById('toggle-top-btn')
     this.toggleTopMBtn.addEventListener('click', this.onToggleTopBtn)
@@ -152,7 +189,7 @@ class _Layout {
       unicode: document.getElementById('unicode-value'),
     }
 
-    this.onToggleTopBtn()
+    // this.onToggleTopBtn()
   }
 
   setLoading() {
@@ -167,6 +204,7 @@ class _Layout {
 
   bind() {
     this.onClickNextBtn = this.onClickNextBtn.bind(this)
+    this.onClickSearchBtn = this.onClickSearchBtn.bind(this)
     this.onToggleTopBtn = this.onToggleTopBtn.bind(this)
   }
 

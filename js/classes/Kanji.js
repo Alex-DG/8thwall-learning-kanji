@@ -129,7 +129,13 @@ class _Kanji {
     // create the Points object
     const pointsCloud = new THREE.Points(geometry, material)
     pointsCloud.rotateX(Math.PI)
-    pointsCloud.scale.multiplyScalar(0.7)
+    pointsCloud.scale.multiplyScalar(0.5)
+    pointsCloud.position.x -= 0.5
+
+    if (this.currentIndex > 0) {
+      pointsCloud.position.x += this.currentIndex * 4
+    }
+    console.log('DRAW SUCCES', this.currentIndex)
 
     this.group.add(pointsCloud)
   }
@@ -254,8 +260,9 @@ class _Kanji {
     }
   }
 
-  setConfig() {
+  setConfig(index, clear) {
     this.materials = []
+    this.currentIndex = index
 
     if (!this.group) {
       const { scene, camera } = XR8.Threejs.xrScene()
@@ -267,13 +274,11 @@ class _Kanji {
       this.group = group
 
       this.setTouchEvents()
-    } else {
-      this.clear()
     }
   }
 
-  draw(text) {
-    this.setConfig()
+  draw(text, index = 0) {
+    this.setConfig(index)
 
     const svg = this.getSvgParseFromString(text)
     const lines = this.getLines(svg)

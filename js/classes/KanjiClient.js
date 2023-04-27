@@ -1,5 +1,7 @@
 import Layout from './Layout'
 
+import axios from 'axios'
+
 class _KanjiClient {
   getApi() {
     return {
@@ -107,6 +109,51 @@ class _KanjiClient {
     }
 
     console.log('->', 'done: ', ' [ fetch Kanji Svg ]')
+  }
+
+  async searchKanjiByWord(word) {
+    console.log('->', 'in progress: ', ' [ search Kanji By Word ]', word)
+
+    try {
+      const isDebug = import.meta.env.VITE_GITHUB_TOKEN ? true : false
+      const proxyUrl = 'https://cors-anywhere.herokuapp.com/'
+      const targetUrl = `https://jisho.org/api/v1/search/words?keyword=${encodeURIComponent(
+        word.toLowerCase()
+      )}`
+      const url = proxyUrl + targetUrl
+
+      const response = await fetch(isDebug ? url : targetUrl)
+
+      if (response.ok) {
+        const data = await response.json()
+
+        const length = data.data.length
+        let index = 0
+        let kanji = null
+
+        while (kanji === null && index <= length - 1) {
+          const value = data.data[index].japanese[0]?.word
+
+          if (value) {
+            kanji = value
+          } else {
+            index += 1
+          }
+        }
+
+        console.log({ data, kanji })
+
+        return kanji
+      } else {
+        throw new Error(
+          `Failed to search Kanji by word: ${response.statusText}`
+        )
+      }
+    } catch (error) {
+      console.log('error-search-kanji-by-word', { error })
+    }
+
+    console.log('->', 'done: ', ' [ search Kanji By Word ]')
   }
 }
 const KanjiClient = new _KanjiClient()
