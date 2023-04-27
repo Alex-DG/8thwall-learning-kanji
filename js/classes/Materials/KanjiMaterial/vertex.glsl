@@ -16,7 +16,8 @@ void main() {
     // Transition 
     pos.x *= uScale + (sin(pos.y * 4.0 + uTime) * (1.0 - uScale));
     pos.y *= uScale + (sin(pos.z * 4.0 + uTime) * (1.0 - uScale)); 
-    pos.z *= uScale + (sin(pos.x * 10.0 + uTime) * (1.0 - uScale));
+    pos.z *= uScale + (sin(pos.x * 4.0 + uTime) * (1.0 - uScale));
+
     pos *= uScale;
 
     vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);

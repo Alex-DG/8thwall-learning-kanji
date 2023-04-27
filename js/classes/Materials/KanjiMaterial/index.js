@@ -12,7 +12,7 @@ class KanjiMaterial extends ShaderMaterial {
       uniforms: {
         uTime: { value: 0 },
         uScale: { value: 0 },
-        uFrequency: { value: 0.15 },
+        uFrequency: { value: 0.13 },
         uColor1: { value: color1 },
         uColor2: { value: color2 },
       },

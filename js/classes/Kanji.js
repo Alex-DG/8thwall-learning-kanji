@@ -41,7 +41,7 @@ class _Kanji {
     // create the Points object
     const pointsCloud = new THREE.Points(geometry, material)
     pointsCloud.rotateX(Math.PI)
-    pointsCloud.scale.multiplyScalar(0.8)
+    pointsCloud.scale.multiplyScalar(0.7)
 
     this.group.add(pointsCloud)
   }

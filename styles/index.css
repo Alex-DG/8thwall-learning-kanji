@@ -26,6 +26,54 @@ body {
   height: 100%;
 }
 
+/** TOP UI **/
+.top-menu {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 0.7rem;
+  width: 80%;
+  padding: 1rem 0.5rem;
+
+  border: 4px solid white;
+  border-radius: 0.25rem;
+  background-color: #24242471;
+}
+
+.top-container {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+#toggle-top-btn {
+  display: inline-block;
+
+  height: 1.5em;
+  width: 1.5em;
+
+  background: white;
+  border: 2px solid white;
+  border-radius: 50%;
+
+  opacity: 0.2;
+
+  margin: 2em 0;
+}
+
+#kanji-value {
+  font-size: 1.5rem;
+}
+
+/** BOTTOM UI **/
+
 .bottom-menu {
   display: flex;
   justify-content: center;
