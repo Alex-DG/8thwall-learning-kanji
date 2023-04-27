@@ -57,7 +57,7 @@ class _KanjiClient {
 
       if (response.ok) {
         const data = await response.json()
-        console.log('->', 'details', { data })
+        // console.log('->', 'details', { data })
         return data
       } else {
         throw new Error(`Failed to fetch kanji details: ${response.statusText}`)
