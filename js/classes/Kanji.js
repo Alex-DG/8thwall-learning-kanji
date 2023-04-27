@@ -54,8 +54,8 @@ class _Kanji {
 
       // Rotate the mesh based on the change in touch position
       this.group.rotation.y += deltaTouch.x * 0.01
-      this.group.rotation.z += deltaTouch.y * -0.01
-      this.group.rotation.x += deltaTouch.y * 0.01
+      // this.group.rotation.z += deltaTouch.y * -0.01
+      // this.group.rotation.x += deltaTouch.y * 0.01
 
       // Update the last touch positions and distance
       this.lastTouch = currentTouch

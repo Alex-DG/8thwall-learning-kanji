@@ -5,6 +5,7 @@ uniform float uFrequency;
 attribute vec3 aRandom;
 
 varying vec3 vPosition;
+varying vec2 vUv;
 
 void main() {
     vec3 pos = position;
@@ -25,4 +26,5 @@ void main() {
     gl_PointSize = 125.0 / -mvPosition.z;
 
     vPosition = pos;
+    vUv = uv;
 }
