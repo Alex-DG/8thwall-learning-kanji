@@ -8,6 +8,94 @@ import { mix } from './Utils/Maths'
 import KanjiMaterial from './Materials/KanjiMaterial'
 
 class _Kanji {
+  // TOUCH FEATURES
+  //////////////////////////////////////////////////////////////////////////////////////////
+
+  // Helper function to get the positions of two touches relative to the canvas
+  getTouchPositions(touches) {
+    const { renderer } = XR8.Threejs.xrScene()
+    const canvas = renderer.domElement
+    const rect = canvas.getBoundingClientRect()
+
+    return [
+      {
+        x: touches[0].clientX - rect.left,
+        y: touches[0].clientY - rect.top,
+      },
+      {
+        x: touches[1].clientX - rect.left,
+        y: touches[1].clientY - rect.top,
+      },
+    ]
+  }
+
+  // Helper function to get the distance between two touches
+  getTouchDistance(touches) {
+    const dx = touches[1].clientX - touches[0].clientX
+    const dy = touches[1].clientY - touches[0].clientY
+    return Math.sqrt(dx * dx + dy * dy)
+  }
+
+  onTouchMove(event) {
+    // If there are exactly two touches, calculate the new positions and scale/rotate the mesh
+    if (event.touches.length === 2) {
+      const currentTouch = this.getTouchPositions(event.touches)
+      const currentDistance = this.getTouchDistance(event.touches)
+
+      // Calculate the change in touch position and distance
+      const deltaTouch = {
+        x: currentTouch[0].x - this.lastTouch[0].x,
+        y: currentTouch[0].y - this.lastTouch[0].y,
+      }
+      const deltaDistance = currentDistance - this.lastDistance
+
+      // Scale the mesh based on the change in touch distance
+      this.group.scale.multiplyScalar(1 + deltaDistance * 0.01)
+
+      // Rotate the mesh based on the change in touch position
+      this.group.rotation.y += deltaTouch.x * 0.01
+      this.group.rotation.z += deltaTouch.y * -0.01
+      this.group.rotation.x += deltaTouch.y * 0.01
+
+      // Update the last touch positions and distance
+      this.lastTouch = currentTouch
+      this.lastDistance = currentDistance
+    }
+  }
+
+  onTouchStart(event) {
+    switch (event.touches.length) {
+      case 3:
+        XR8.XrController.recenter()
+        break
+      case 2:
+        // record position
+        this.lastTouch = this.getTouchPositions(event.touches)
+        this.lastDistance = this.getTouchDistance(event.touches)
+        break
+      case 1:
+        // this.placeObject(event)
+        break
+    }
+  }
+
+  onTouchEnd() {
+    // Reset the touch gesture variables
+    this.lastTouch = null
+    this.lastDistance = null
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////
+
+  setTouchEvents() {
+    const { renderer } = XR8.Threejs.xrScene()
+    const canvas = renderer.domElement
+
+    canvas.addEventListener('touchstart', this.onTouchStart.bind(this))
+    canvas.addEventListener('touchmove', this.onTouchMove.bind(this))
+    canvas.addEventListener('touchend', this.onTouchEnd.bind(this))
+  }
+
   createPointsCloud(data) {
     // create a BufferGeometry
     const geometry = new THREE.BufferGeometry()
@@ -177,6 +265,8 @@ class _Kanji {
       camera.lookAt(group.position)
 
       this.group = group
+
+      this.setTouchEvents()
     } else {
       this.clear()
     }
