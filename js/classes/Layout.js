@@ -1,9 +1,23 @@
+import Drawing from './Drawing'
 import Kanji from './Kanji'
 import KanjiClient from './KanjiClient'
 
 import { gsap } from 'gsap'
+import { textRecognition } from './Utils/OCR'
 
 class _Layout {
+  onClickRecognitionBtn() {
+    console.log('->', 'click Recognition Btn')
+
+    const base64Image = Drawing.createb64Img()
+    const myimg = document.getElementById('myimg')
+    myimg.src = base64Image
+    myimg.style.display = 'block'
+
+    console.log({ base64Image })
+    textRecognition(base64Image)
+  }
+
   async onClickNextBtn() {
     this.startLoading()
 
@@ -154,6 +168,7 @@ class _Layout {
           <input id="word-input" placeholder="type a word" value="" />
           <button id="next-btn">Random 漢字</button>
           <button id="search-btn">Search 漢字</button>
+          <button id="recognition-btn">Recognition 漢字</button>
         </div>
     `
 
@@ -164,6 +179,9 @@ class _Layout {
 
     this.searchBtn = document.getElementById('search-btn')
     this.searchBtn.addEventListener('click', this.onClickSearchBtn)
+
+    this.searchBtn = document.getElementById('recognition-btn')
+    this.searchBtn.addEventListener('click', this.onClickRecognitionBtn)
   }
 
   setTop() {
@@ -205,6 +223,7 @@ class _Layout {
   bind() {
     this.onClickNextBtn = this.onClickNextBtn.bind(this)
     this.onClickSearchBtn = this.onClickSearchBtn.bind(this)
+    this.onClickRecognitionBtn = this.onClickRecognitionBtn.bind(this)
     this.onToggleTopBtn = this.onToggleTopBtn.bind(this)
   }
 
@@ -216,7 +235,7 @@ class _Layout {
     this.setTop()
     this.setLoading()
 
-    this.startLoading()
+    // this.startLoading()
   }
 }
 const Layout = new _Layout()

@@ -114,6 +114,10 @@ class _KanjiClient {
   async searchKanjiByWord(word) {
     console.log('->', 'in progress: ', ' [ search Kanji By Word ]', word)
 
+    const isKanji = (ch) => {
+      return ch >= '\u4e00' && ch <= '\u9faf'
+    }
+
     try {
       const isDebug = import.meta.env.VITE_GITHUB_TOKEN ? true : false
       const proxyUrl = 'https://cors-anywhere.herokuapp.com/'
@@ -127,21 +131,30 @@ class _KanjiClient {
       if (response.ok) {
         const data = await response.json()
 
-        const length = data.data.length
-        let index = 0
-        let kanji = null
+        const kanjiReadings = data.data
+          .flatMap((entry) => entry.japanese)
+          .filter((japanese) => japanese.word && isKanji(japanese.word))
 
-        while (kanji === null && index <= length - 1) {
-          const value = data.data[index].japanese[0]?.word
+        // Extract Kanji
+        const kanjiList = kanjiReadings?.map((japanese) => japanese.word)
+        // console.log({ kanjiList })
+        const kanji = kanjiList[0]
 
-          if (value) {
-            kanji = value
-          } else {
-            index += 1
-          }
-        }
+        // const length = data.data.length
+        // let index = 0
+        // let kanji = null
 
-        console.log({ data, kanji })
+        // while (kanji === null && index <= length - 1) {
+        //   const value = data.data[index].japanese[0]?.word
+
+        //   if (value) {
+        //     kanji = value
+        //   } else {
+        //     index += 1
+        //   }
+        // }
+
+        // console.log({ data, kanji })
 
         return kanji
       } else {

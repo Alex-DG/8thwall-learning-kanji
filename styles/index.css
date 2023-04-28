@@ -145,6 +145,42 @@ body {
   box-shadow: rgba(0, 0, 0, 0.4) 5.95px 5.95px 3.6px;
 }
 
+#myimg {
+  display: none;
+
+  position: absolute;
+  z-index: 3;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+
+  width: 100%;
+  height: 100%;
+
+  background-color: rgba(42, 40, 40, 0.174);
+}
+
+#recognition-btn {
+  display: none;
+
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: 0.12rem;
+
+  color: #ffffff;
+  background-color: rgb(179, 79, 251);
+
+  width: 90%;
+  padding: 0.7rem 2rem;
+
+  border-radius: 0.15rem;
+  border-width: 4px;
+  border-color: #ffffff;
+
+  box-shadow: rgba(0, 0, 0, 0.4) 5.95px 5.95px 3.6px;
+}
+
 #word-input {
   display: none;
 
